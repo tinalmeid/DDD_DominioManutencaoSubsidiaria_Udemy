@@ -31,6 +31,14 @@ jobs:
         run: |
           dotnet tool install --global dotnet-sonarscanner
 
+          # Constrói os parâmetros básicos
+            SONAR_PR_ARGS=""
+
+            # Adiciona os parâmetros de PR APENAS se o evento for um Pull Request
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+                SONAR_PR_ARGS="/d:sonar.pullrequest.key=${{ github.event.pull_request.number }} /d:sonar.pullrequest.branch=${{ github.head_ref }} /d:sonar.pullrequest.base=${{ github.base_ref }}"
+                fi
+
           # --- Comando 'dotnet sonarscanner begin' ---
           dotnet sonarscanner begin \
             /k:"tinalmeid_DDD_DominioManutencaoSubsidiaria_Udemy"\
