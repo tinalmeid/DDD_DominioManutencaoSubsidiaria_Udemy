@@ -17,11 +17,14 @@ namespace Manutencao.Solicitacao.Dominio.SolicitacoesDeManutencao
 
         private SolicitacaoDeManutencao()
         {
-            // Apenas para satisfazer o EF Core
+            // Apenas para satisfazer o EF Core e o compilador C#
             Solicitante = new Autor(0, "Sem Solicitante");
             Aprovador = new Autor(0, "Sem Aprovador");
             // Incluir inicialização da string IdentificadorDaSubsidiaria para evitar erro de campo obrigatório
             IdentificadorDaSubsidiaria = string.Empty;
+            Justificativa = string.Empty;
+            // Incluir inicialização do Value Object Contrato para evitar erro de campo obrigatório
+            Contrato = null!;
         }
 
         public SolicitacaoDeManutencao(
