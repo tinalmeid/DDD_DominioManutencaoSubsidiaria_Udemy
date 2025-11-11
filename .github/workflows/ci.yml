@@ -25,20 +25,23 @@ jobs:
           dotnet-version: "6.0.x"
 
       # -----------------------------------------------------
-      # 3. INICIAR ANALISE DO SONARCLOUD
+      # 3. INICIAR ANALISE DO SONARCLOUD (Correção de Branch e Segurança)
       # -----------------------------------------------------
 
       - name: 3. Iniciar Analise do SonarCloud
         env:
           # 1. Segredo passado via variável de ambiente (Regra Sonar)
           SONAR_TOKEN_ENV: ${{ secrets.SONARCLOUD_TOKEN }}
-          # 2. Variáveis de PR higienizadas (Regra Sonar anterior)
+          # 2. Variáveis de PR higienizadas (Regra Sonar)
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_BRANCH: ${{ github.head_ref }}
           PR_BASE: ${{ github.base_ref }}
 
         run: |
           dotnet tool install --global dotnet-sonarscanner
+
+          # Define os parâmetros padrão (Project Key e Organization)
+          SONAR_BASE_ARGS="/k:'DDD-DominioManutencaoSubsidiaria-Udemy' /o:'tinalmeid' /d:sonar.token='$SONAR_TOKEN_ENV' /d:sonar.host.url='https://sonarcloud.io' /d:sonar.cs.opencover.reportsPaths='test/Manutencao.Solicitacao.Testes/coverage.opencover.xml'"
 
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             # Usa a variável de ambiente $SONAR_TOKEN_ENV em vez do segredo direto
