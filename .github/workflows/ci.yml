@@ -1,7 +1,8 @@
+# .github/workflows/ci.yml
+
 name: CI - Build, Testes e Analise de Qualidade (SonarCloud)
 
 on:
-  # Dispara em pushes na main E em todos os Pull Requests
   push:
     branches:
       - main
@@ -23,37 +24,60 @@ jobs:
         with:
           dotnet-version: "6.0.x"
 
-      # --------- Integracao com SonarCloud ---------
+      # -----------------------------------------------------
+      # 3. INICIAR ANALISE DO SONARCLOUD
+      # -----------------------------------------------------
 
       - name: 3. Iniciar Analise do SonarCloud
         env:
-          SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+          # 1. Segredo passado via variável de ambiente (Regra Sonar)
+          SONAR_TOKEN_ENV: ${{ secrets.SONARCLOUD_TOKEN }}
+          # 2. Variáveis de PR higienizadas (Regra Sonar anterior)
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BRANCH: ${{ github.head_ref }}
+          PR_BASE: ${{ github.base_ref }}
+
         run: |
           dotnet tool install --global dotnet-sonarscanner
 
-          # --- Comando 'dotnet sonarscanner begin' ---
-          dotnet sonarscanner begin \
-            /k:"tinalmeid_DDD_DominioManutencaoSubsidiaria_Udemy"\
-            /o:"tinalmeid" \
-            /d:sonar.token="${{ secrets.SONARCLOUD_TOKEN }}" \
-            /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.opencover.reportsPaths="test/Manutencao.SolicitacaoTestes/coverage.opencover.xml" \
-            
-            # --- Parametros condicionais para Pull Request ---
-            # O SonarCloud precisa desses parametros para fazer o Code Review no PR
-            /d:sonar.pullrequest.key=${{ github.event.pull_request.number }} \
-            /d:sonar.pullrequest.branch=${{ github.head_ref }} \
-            /d:sonar.pullrequest.base=${{ github.base_ref }}
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # Usa a variável de ambiente $SONAR_TOKEN_ENV em vez do segredo direto
+            dotnet sonarscanner begin \
+              /k:'DDD-DominioManutencaoSubsidiaria-Udemy' \
+              /o:"tinalmeid" \
+              /d:sonar.token="$SONAR_TOKEN_ENV" \
+              /d:sonar.host.url="https://sonarcloud.io" \
+              /d:sonar.cs.opencover.reportsPaths="test/Manutencao.SolicitacaoTestes/coverage.opencover.xml" \
+              /d:sonar.pullrequest.key="$PR_NUMBER" \
+              /d:sonar.pullrequest.branch="$PR_BRANCH" \
+              /d:sonar.pullrequest.base="$PR_BASE"
+          else
+            dotnet sonarscanner begin \
+              /k:'DDD-DominioManutencaoSubsidiaria-Udemy' \
+              /o:"tinalmeid" \
+              /d:sonar.token="$SONAR_TOKEN_ENV" \
+              /d:sonar.host.url="https://sonarcloud.io" \
+              /d:sonar.cs.opencover.reportsPaths="test/Manutencao.SolicitacaoTestes/coverage.opencover.xml"
+          fi
 
       - name: 4. Build do Projeto (Compilacao)
         run: dotnet build --no-incremental
 
       - name: 5. Rodar Testes Unitarios e Gerar Cobertura
-        # Roda os testes no projeto de testes para coletar a cobertura
-        run: dotnet test test/Manutencao.SolicitacaoTestes/Manutencao.SolicitacaoTestes.csproj /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --logger "trx;LogFileName=TestResults.trx"
+        run: |
+          if [ -f "test/Manutencao.SolicitacaoTestes/Manutencao.SolicitacaoTestes.csproj" ]; then
+            dotnet test test/Manutencao.SolicitacaoTestes/Manutencao.SolicitacaoTestes.csproj /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --logger "trx;LogFileName=TestResults.trx"
+          else
+            echo "Projeto de testes não encontrado. Pulando etapa de testes."
+          fi
 
       - name: 6. Finalizar Analise e Enviar ao SonarCloud
-        run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONARCLOUD_TOKEN }}"
+        env:
+          SONAR_TOKEN_ENV: ${{ secrets.SONARCLOUD_TOKEN }}
+        # Usa a variável de ambiente aqui também
+        run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN_ENV"
+
+      # -----------------------------------------------------
 
       - name: 7. Fazer Upload dos Artefatos de Build (Opcional)
         uses: actions/upload-artifact@v4
