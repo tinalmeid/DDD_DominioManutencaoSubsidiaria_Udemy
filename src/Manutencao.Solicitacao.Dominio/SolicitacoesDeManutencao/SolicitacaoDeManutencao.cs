@@ -42,9 +42,9 @@ namespace Manutencao.Solicitacao.Dominio.SolicitacoesDeManutencao
         {
             // Validações das regras de negócio (Domain Exceptions)
             ExcecaoDeDominioException.LancarQuando(string.IsNullOrEmpty(identificadorDaSubsidiaria),
-             "Identificador da subsidiária é obrigatório.");
+             "A subsidiária é obrigatória.");
             ExcecaoDeDominioException.LancarQuando(string.IsNullOrEmpty(justificativa),
-             "Justificativa é obrigatória.");
+             "A justificativa é obrigatória.");
             ExcecaoDeDominioException.LancarQuando(inicioDesejadoParaManutencao < DateTime.Now.Date,
              "Data de início para manutenção não pode ser inferior a data atual.");
 
