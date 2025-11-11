@@ -47,7 +47,7 @@ jobs:
               /o:"tinalmeid" \
               /d:sonar.token="$SONAR_TOKEN_ENV" \
               /d:sonar.host.url="https://sonarcloud.io" \
-              /d:sonar.cs.opencover.reportsPaths="test/Manutencao.SolicitacaoTestes/coverage.opencover.xml" \
+              /d:sonar.cs.opencover.reportsPaths="test/Manutencao.Solicitacao.Testes/coverage.opencover.xml" \
               /d:sonar.pullrequest.key="$PR_NUMBER" \
               /d:sonar.pullrequest.branch="$PR_BRANCH" \
               /d:sonar.pullrequest.base="$PR_BASE"
@@ -57,16 +57,16 @@ jobs:
               /o:"tinalmeid" \
               /d:sonar.token="$SONAR_TOKEN_ENV" \
               /d:sonar.host.url="https://sonarcloud.io" \
-              /d:sonar.cs.opencover.reportsPaths="test/Manutencao.SolicitacaoTestes/coverage.opencover.xml"
+              /d:sonar.cs.opencover.reportsPaths="test/Manutencao.Solicitacao.Testes/coverage.opencover.xml"
           fi
 
       - name: 4. Build do Projeto (Compilacao)
-        run: dotnet build --no-incremental
+        run: dotnet build Manutencao.Solicitacao.sln --no-incremental
 
       - name: 5. Rodar Testes Unitarios e Gerar Cobertura
         run: |
-          if [ -f "test/Manutencao.SolicitacaoTestes/Manutencao.SolicitacaoTestes.csproj" ]; then
-            dotnet test test/Manutencao.SolicitacaoTestes/Manutencao.SolicitacaoTestes.csproj /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --logger "trx;LogFileName=TestResults.trx"
+          if [ -f "test/Manutencao.Solicitacao.Testes/Manutencao.Solicitacao.Testes.csproj" ]; then
+            dotnet test test/Manutencao.Solicitacao.Testes/Manutencao.Solicitacao.Testes.csproj /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --logger "trx;LogFileName=TestResults.trx"
           else
             echo "Projeto de testes não encontrado. Pulando etapa de testes."
           fi
