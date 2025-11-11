@@ -46,7 +46,7 @@ namespace Manutencao.Solicitacao.Dominio.SolicitacoesDeManutencao
             ExcecaoDeDominioException.LancarQuando(string.IsNullOrEmpty(justificativa),
              "Justificativa é obrigatória.");
             ExcecaoDeDominioException.LancarQuando(inicioDesejadoParaManutencao < DateTime.Now.Date,
-             "Data de Início para manutenção não pode ser inferior a data atual.");
+             "Data de início para manutenção não pode ser inferior a data atual.");
 
             // Atribuições dos valores aos campos da classe
             Solicitante = new Autor(identificadorDoSolicitante, nomeDoSolicitante);
