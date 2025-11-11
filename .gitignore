@@ -1,3 +1,5 @@
+# Adiciona o arquivo de configuracao local ao .gitignore para ignora-lo
+echo ".vscode/settings.json" >> .gitignore
 # ----------------- Visual Studio / VS Code -----------------
 .vs/
 *.suo
