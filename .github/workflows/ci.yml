@@ -25,14 +25,14 @@ jobs:
           dotnet-version: "6.0.x"
 
       # -----------------------------------------------------
-      # 3. INICIAR ANALISE DO SONARCLOUD
+      # 3. INICIAR ANALISE DO SONARCLOUD (Correção de Branch e Segurança)
       # -----------------------------------------------------
 
       - name: 3. Iniciar Analise do SonarCloud
         env:
           # 1. Segredo passado via variável de ambiente (Regra Sonar)
           SONAR_TOKEN_ENV: ${{ secrets.SONARCLOUD_TOKEN }}
-          # 2. Variáveis de PR higienizadas (Regra Sonar anterior)
+          # 2. Variáveis de PR higienizadas (Regra Sonar)
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_BRANCH: ${{ github.head_ref }}
           PR_BASE: ${{ github.base_ref }}
@@ -40,33 +40,29 @@ jobs:
         run: |
           dotnet tool install --global dotnet-sonarscanner
 
+          # Define os parâmetros padrão (Project Key e Organization)
+          SONAR_BASE_ARGS="/k:'DDD-DominioManutencaoSubsidiaria-Udemy' /o:'tinalmeid' /d:sonar.token='$SONAR_TOKEN_ENV' /d:sonar.host.url='https://sonarcloud.io' /d:sonar.cs.opencover.reportsPaths='test/Manutencao.Solicitacao.Testes/coverage.opencover.xml'"
+
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # Usa a variável de ambiente $SONAR_TOKEN_ENV em vez do segredo direto
-            dotnet sonarscanner begin \
-              /k:'DDD-DominioManutencaoSubsidiaria-Udemy' \
-              /o:"tinalmeid" \
-              /d:sonar.token="$SONAR_TOKEN_ENV" \
-              /d:sonar.host.url="https://sonarcloud.io" \
-              /d:sonar.cs.opencover.reportsPaths="test/Manutencao.SolicitacaoTestes/coverage.opencover.xml" \
+            # Comando para Pull Request (usa parâmetros de comparação)
+            dotnet sonarscanner begin $SONAR_BASE_ARGS \
               /d:sonar.pullrequest.key="$PR_NUMBER" \
               /d:sonar.pullrequest.branch="$PR_BRANCH" \
               /d:sonar.pullrequest.base="$PR_BASE"
           else
-            dotnet sonarscanner begin \
-              /k:'DDD-DominioManutencaoSubsidiaria-Udemy' \
-              /o:"tinalmeid" \
-              /d:sonar.token="$SONAR_TOKEN_ENV" \
-              /d:sonar.host.url="https://sonarcloud.io" \
-              /d:sonar.cs.opencover.reportsPaths="test/Manutencao.SolicitacaoTestes/coverage.opencover.xml"
+            # Comando para PUSH na MAIN (Usa parâmetro de branch para registro/baseline)
+            dotnet sonarscanner begin $SONAR_BASE_ARGS \
+              /d:sonar.branch.name="main"
           fi
 
       - name: 4. Build do Projeto (Compilacao)
-        run: dotnet build --no-incremental
+        # CORREÇÃO: Especifica o arquivo de solução explicitamente para evitar erro MSB1003
+        run: dotnet build Manutencao.Solicitacao.sln --no-incremental
 
       - name: 5. Rodar Testes Unitarios e Gerar Cobertura
         run: |
-          if [ -f "test/Manutencao.SolicitacaoTestes/Manutencao.SolicitacaoTestes.csproj" ]; then
-            dotnet test test/Manutencao.SolicitacaoTestes/Manutencao.SolicitacaoTestes.csproj /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --logger "trx;LogFileName=TestResults.trx"
+          if [ -f "test/Manutencao.Solicitacao.Testes/Manutencao.Solicitacao.Testes.csproj" ]; then
+            dotnet test test/Manutencao.Solicitacao.Testes/Manutencao.Solicitacao.Testes.csproj /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --logger "trx;LogFileName=TestResults.trx"
           else
             echo "Projeto de testes não encontrado. Pulando etapa de testes."
           fi
